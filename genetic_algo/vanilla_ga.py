@@ -74,13 +74,13 @@ class GA():
     def save_population(self):
         name = f"data/population_dump_{time.time()}.json"
         with open(name, "w") as f:
-            json.dump(self.population)
+            np.save(f, self.population)
             f.close()
         return name
     
-    def load_populaiton(self, name):
+    def load_population(self, name):
         with open(name,) as f:
-            data = json.load(f)
+            data = np.load(f)
             f.close()
         return data
         
