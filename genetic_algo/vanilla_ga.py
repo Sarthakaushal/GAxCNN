@@ -1,7 +1,8 @@
 import numpy as np
 import pandas as pd
 import math
-
+import json
+from config import GAxCNN as conf
 class MetaData():
     def __init__(self, result,did_mutate=False,
                 chromosome_mutated=-1, alee_index=-1) -> None:
@@ -22,6 +23,7 @@ class GA():
             generation_data ='data/config_1.txt'
                  ) -> None:
         self.selection = selection
+        self.pop_size = pop_size
         self.max_gen = max_gen
         self.crossover_index = crossover_index
         self.alpha = mutation_param
@@ -39,7 +41,6 @@ class GA():
         self.constraints['S'] = S
         self.current_gen = g
         self.stop = stop
-        self.pop_size = pop_size
         self.sol_metadata = {}
     
     def init_knapsack_population(self, config):
@@ -69,6 +70,19 @@ class GA():
         P = np. random . randint (2, size = ( pop_size , n))
         return P, W, S, g, stop
     
+    def save_population(self):
+        name = f"data/population_dump_{time.time()}.json"
+        with open(name, "w") as f:
+            json.dump(self.population)
+            f.close()
+        return name
+    
+    def load_populaiton(self, name):
+        with open(name,) as f:
+            data = json.load(f)
+            f.close()
+        return data
+        
     def augment_init_gen(self):
         """
         When the random population is initialized then there should be some auguentation for 
