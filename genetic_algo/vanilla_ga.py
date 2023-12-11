@@ -73,17 +73,17 @@ class GA():
     
     def save_population(self):
         name = f"data/population_dump_{time.time()}.json"
-        with open(name, "w") as f:
+        with open(name, "wb") as f:
             np.save(f, self.population)
             f.close()
         return name
     
     def load_population(self, name):
-        with open(name,) as f:
+        with open(name, "rb") as f:
             data = np.load(f)
             f.close()
         return data
-        
+         
     def augment_init_gen(self):
         """
         When the random population is initialized then there should be some auguentation for 
