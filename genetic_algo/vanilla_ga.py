@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import math
 import json
+import time
 from config import GAxCNN as conf
 class MetaData():
     def __init__(self, result,did_mutate=False,
