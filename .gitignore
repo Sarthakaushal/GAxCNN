@@ -160,3 +160,6 @@ cython_debug/
 #.idea/
 data/config_1.txt
 data/config_2.txt
+
+*.csv
+*.ipynb

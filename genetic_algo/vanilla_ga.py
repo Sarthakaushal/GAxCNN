@@ -12,13 +12,14 @@ class MetaData():
 
 class GA():
     def __init__(
-        self,
-        selection = None,
-        max_gen = 0,
-        crossover_index = 0,
-        mutation_param = 0.1,
-        boost_weak_chromosomes = False,
-        generation_data ='data/config_1.txt'
+            self,
+            selection = None,
+            pop_size = 0,
+            max_gen = 0,
+            crossover_index = 0,
+            mutation_param = 0.1,
+            boost_weak_chromosomes = False,
+            generation_data ='data/config_1.txt'
                  ) -> None:
         self.selection = selection
         self.max_gen = max_gen
@@ -31,11 +32,14 @@ class GA():
         self.verbose = 1
         P, W, S, g, stop = self.init_knapsack_population(
                 generation_data)
+        if self.max_gen:
+            stop = self.max_gen
         self.population = P
         self.constraints['W'] = W
         self.constraints['S'] = S
         self.current_gen = g
         self.stop = stop
+        self.pop_size = pop_size
         self.sol_metadata = {}
     
     def init_knapsack_population(self, config):
@@ -50,20 +54,38 @@ class GA():
         S ( list of tuples ): Each tuple is an item (w_i , v_i)
         stop ( int) : final generation ( stop condition )
         """
-        # np.random.seed(1470)
+        np.random.seed(1470)
         # Populate the problem variables
         if self.verbose:
             print(config)
         with open(config, 'r') as file :
             lines = file.readlines ()
         pop_size , n, stop , W = map(int , [lines[i].strip() for i in range (4) ])
-        # if self.pop_size:
-        #     pop_size = self.pop_size
+        if self.pop_size:
+            pop_size = self.pop_size
         S = [ tuple(map(int , line.strip().split())) for line in lines[4:]]
         # Initialize population at generation 0
         g = 0
         P = np. random . randint (2, size = ( pop_size , n))
         return P, W, S, g, stop
+    
+    def augment_init_gen(self):
+        """
+        When the random population is initialized then there should be some auguentation for 
+        the overshooting 
+        """
+        for i in range(self.population.shape[0]):
+            chr = self.population[i]
+            sum_fit = self.fitness(chr)
+            while sum_fit<=10:
+                activated_chr_indx = np.where(chr==1)[0]
+                if activated_chr_indx.shape[0]>0:
+                    flip_index = np.random.randint(activated_chr_indx.shape[0])
+                    chr[activated_chr_indx[flip_index]] = 0
+                else:
+                    break
+                sum_fit = self.fitness(chr)
+            self.population[i] = chr
     
     def dot(self, chromosome, spl=False):
         """
@@ -119,7 +141,7 @@ class GA():
         fit_vec = self.fitness()
         if self.boost_weak_chromosomes:
             for index in range(fit_vec.shape[0]):
-                if fit_vec[index]==0:
+                if fit_vec[index]==1:
                     fit_vec[index] == 10
         prob_fit_vec = fit_vec/np.sum(fit_vec)
         #Will not fit values not get selected at all? for now have excluded them
@@ -211,6 +233,7 @@ class GA():
         """
         if self.verbose:
             print(f"{'='*20} GENERATION : {self.current_gen} {'='*20}")
+        self.augment_init_gen()
         p_new = []
         if self.selection == "roulette_selection":
             selection = self.roulette_selection
