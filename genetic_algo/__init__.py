@@ -111,7 +111,8 @@ class GAxCNN(GA):
                     chromosome_mutated=mutation_index,
                     alee_index= gene_index
                 )
-        elif np.unique(self.fitness()).shape[0] ==1:
+        elif (np.unique(self.fitness()).shape[0] ==1) and (
+                    self.selection == "pool_selection"):
             if self.verbose:
                 print("Lets Mutate, need a little shuffling")
             mutation_index, gene_index = self.mutate(whole_pop=True)
