@@ -162,4 +162,4 @@ data/config_1.txt
 data/config_2.txt
 
 *.csv
-*.ipynb
+# *.ipynb
