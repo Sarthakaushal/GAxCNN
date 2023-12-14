@@ -21,12 +21,16 @@ class GAxCNN(GA):
                  crossover_index = params.crossover_index,
                  mutation_param = params.mutation_param,
                  boost_weak_chromosomes = params.boost_weak_chromosomes,
-                 generation_data =params.generation_data):
+                 generation_data =params.generation_data,
+                 pooling_type = params.pooling_type,
+                 kernel_size = params.kernel_size):
         """
         constructor for parent class
         """
         self.pop_size = pop_size
         self.padding = 0
+        self.pooling_type = pooling_type
+        self.kernel_size = kernel_size
         super().__init__(
             selection = selection,
             max_gen = max_gen,
@@ -38,10 +42,18 @@ class GAxCNN(GA):
             )
         self.orig_population = self.population[:]
         self.generation_snaps = {}
-    def update_selection(self, new_selection):
-        self.selection = new_selection
         
+    def update_selection(self, new_selection):
+        """
+        Updates the selection algorithg for a  class
+        """
+        self.selection = new_selection
+        return None
+    
     def max_possible_square(self):
+        """
+        returns max possible square value
+        """
         return math.floor(self.pop_size**(1/2))
     
     def init_knapsack_population(self, config):
@@ -57,7 +69,6 @@ class GAxCNN(GA):
         stop ( int) : final generation ( stop condition )
         """
         print("I am the changed Init function")
-        # np.random.seed(1470)
         # Populate the problem variables
         if self.verbose:
             print(config)
@@ -99,7 +110,7 @@ class GAxCNN(GA):
     
     def to_mutate(self)->MetaData:
         """
-        check_if mutation for this set is on?
+        check_if mutation for this set is on and muatate if condition satifies
         """
         if np.random.choice(range(100), 1)[0]/100 < self.alpha:
             if self.verbose:
@@ -143,28 +154,30 @@ class GAxCNN(GA):
             ele = self.population[row]
             len_ele = ele.shape[0]
             fit_ele = np.array([fit_vector[row]])
-            # print(fit_ele, ele.shape,
-            #         np.array([fit_vector[row]]).shape)
             ele_w_fitness = np.concatenate((fit_ele, ele))
-            # print(ele_w_fitness)
             ele_w_fitness =ele_w_fitness.reshape((1,1,len_ele+1))
-            # print(ele.shape, ele_w_fitness.shape)
             reshaped_pop.append(ele_w_fitness)
         reshaped_pop = np.array(reshaped_pop)
         reshaped_pop = reshaped_pop.reshape(
             (self.max_possible_square(),
                     self.max_possible_square(),
                     len_ele+1))
-        # print(reshaped_pop.shape)
         return reshaped_pop
     
     def pool_selection(self, padded:bool, kernel_size:int, type:str):
+        """
+        imputs : padded, kernel_size, type
+            padded : adds padding to the tensor so that the size of the tensor remains same
+            kernel_size : integer 3,5,7
+            type : 'avg', 'min','min', 'max'
+        return tensor
+        
+        """
         rearranged_pop = self.pop_rearrangement()
         self.padding = 0
         max_dims = self.max_possible_square()
         orignal_shape = rearranged_pop.shape
         if padded:
-            # add zeros to preserve size
             self.padding = kernel_size-2
             pop_mat = np.zeros((
                 max_dims+(kernel_size-2)*2, 
@@ -183,19 +196,19 @@ class GAxCNN(GA):
                 kernel = rearranged_pop[
                     row:row+kernel_size,cols:cols+kernel_size]
                 values = kernel[:,:,0].ravel()
-                # print(values)
-                # avg_ker = np.average(values)
-                # values = values/avg_ker
-                # values = np.reciprocal(values)
-                # values = np.subtract(values, avg_ker)
-                # values[np.isinf(values)] = 0
-                # values = np.na
-                # max_val = np.max(values)
-                # values = np.abs(np.subtract(values,max_val))
-                # print(values)
-                if np.average(values) ==0:
-                    values = np.ones(shape=values.shape)
-                selection = np.random.choice(kernel_indexs,p=values/np.sum(values))
+                if type == 'max':
+                    selection = values.argmax()
+                elif type == 'min':
+                    values = np.reciprocal(values)
+                    values[np.isinf(values)] = 0
+                    selection = values.argmax()
+                elif type == 'avg':
+                    values = np.abs(values - np.average(values))
+                    selection = values.argmin()
+                else:
+                    if np.average(values) ==0:
+                        values = np.ones(shape=values.shape)
+                    selection = np.random.choice(kernel_indexs,p=values/np.sum(values))
                 tmp_Rearrangement[row,cols,:] =  kernel[selection//kernel_size, selection%kernel_size,:]
         return tmp_Rearrangement
     
@@ -235,7 +248,10 @@ class GAxCNN(GA):
         # creating new generation
         if self.selection == "pool_selection":
             for (g_ith_1, g_ith_2, flag) in selection(
-                self.pool_selection(padded=True, kernel_size=5, type='max')):
+                self.pool_selection(
+                    padded=True,
+                    kernel_size= self.kernel_size,
+                    type= self.pooling_type)):
                 if flag:
                     p_new.append(g_ith_1[1:])
                     p_new.append(g_ith_2[1:])

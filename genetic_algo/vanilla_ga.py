@@ -265,7 +265,7 @@ class GA():
         self.population = np.array(p_new)
         return np.asarray(p_new)
     
-    def result_to_df(self):
+    def result_to_df(self, save=True)->pd.DataFrame:
         """
         Generic function to create a DF from the Meta data of the func:solve
         """

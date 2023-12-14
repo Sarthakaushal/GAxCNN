@@ -4,8 +4,16 @@
 # Selection mechanism to be used
 selection = "roulette_selection"
 
+# pool selection Parameters
+################################################
+# pooling type  
+pooling_type = 'max'
+
+# kernel size
+kernel_size = 3
+
 # Maximun number of population geneartions
-max_gen = 5000
+max_gen = 1500
 
 # Polulation size at Generation 0
 pop_size = 150
@@ -22,5 +30,5 @@ boost_weak_chromosomes = True
 # Data config file to be used
 generation_data ='data/config_1.txt'
 
-# maximum generations to run code for
-
+# Data output dir
+output_dir = "output/"
