@@ -1,3 +1,3 @@
-from genetic_algo.vanilla_ga import GA
+from genetic_algo import GAxCNN
 
-GA().solve()
+GAxCNN().solve()
